@@ -83,5 +83,49 @@ class PvSimulator:
 
         df = pd.DataFrame(records)
         print(f"Generated profile with {len(df)} records")
-        df.to_csv('output/profile.csv', index=False)
+        df.to_csv('output/profile_records.csv', index=False)
         return df
+
+    def generate_test_daily_kWh(self):
+        intput_file = "output/profile_records.csv"
+        output_file = "output/daily_kWh.csv"
+
+        df = pd.read_csv(intput_file, parse_dates=['datetime'])
+
+        df = df.sort_values('datetime')
+
+        df['next_P_south'] = df['P_south'].shift(-1)
+        df['next_P_ew'] = df['P_ew'].shift(-1)
+        df['next_time'] = df['datetime'].shift(-1)
+
+        df['delta_h'] = (df['next_time'] - df['datetime']).dt.total_seconds() / 3600
+
+        df['E_south'] = (df['P_south']) + df['next_P_south'] / 2 * df['delta_h']
+        df['E_ew'] = (df['P_ew']) + df['next_P_ew'] / 2 * df['delta_h']
+
+        df = df[df['delta_h'].notna()]
+
+        df['date'] = df['datetime'].dt.date
+
+        daily_energy = df.groupby('date').agg({
+            'E_south' : 'sum',
+            "E_ew" : 'sum'
+        }).reset_index()
+
+        daily_energy['E_total'] = daily_energy['E_south'] + daily_energy['E_ew']
+
+        daily_energy.to_csv(output_file,index=False)
+        print(f"Wygenerowano dzienne kWh, {len(df)} ilość")
+        print(daily_energy.head())
+
+
+    def generate_stats(self):
+        input_daily_kW = "output/profile_records.csv"
+        input_daily_kWh = "output/daily_kWh.csv"
+
+        output_daily_stats = "output/stats/daily_stats.csv"
+        output_monthly_stats = "output/stats/monthly_stats.csv"
+
+        df_kWh = pd.read_csv(input_daily_kWh,parse_dates=['date'])
+        df_kWh['month'] = df_kWh['date'].dt.to_period('M')
+
