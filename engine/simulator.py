@@ -1,8 +1,6 @@
 import os
 from datetime import timedelta, datetime
-
 import pandas as pd
-
 from model.irradiance import Irradiance
 from model.pv_east_west import PV_east_west
 from model.pv_south import PV_South
@@ -63,8 +61,8 @@ class PvSimulator:
 
                 records.append({
                     'datetime': ts,
-                    'P_south': p_south_value,
-                    'P_ew': p_ew_value
+                    'P_south': round(p_south_value,4),
+                    'P_ew': round(p_ew_value,4)
                 })
 
                 processed_count += 1
@@ -83,12 +81,12 @@ class PvSimulator:
 
         df = pd.DataFrame(records)
         print(f"Generated profile with {len(df)} records")
-        df.to_csv('output/profile_records.csv', index=False)
+        df.to_csv('output/profile_records.csv', index=False,float_format='%.4f')
         return df
 
-    def generate_test_daily_kWh(self):
+    def generate_daily_kWh(self):
         intput_file = "output/profile_records.csv"
-        output_file = "output/daily_kWh.csv"
+        output_file = "output/stats/daily_kWh.csv"
 
         df = pd.read_csv(intput_file, parse_dates=['datetime'])
 
@@ -105,6 +103,7 @@ class PvSimulator:
 
         df = df[df['delta_h'].notna()]
 
+
         df['date'] = df['datetime'].dt.date
 
         daily_energy = df.groupby('date').agg({
@@ -114,18 +113,63 @@ class PvSimulator:
 
         daily_energy['E_total'] = daily_energy['E_south'] + daily_energy['E_ew']
 
-        daily_energy.to_csv(output_file,index=False)
+        daily_energy['E_south'] = daily_energy['E_south'].round(4)
+        daily_energy['E_ew'] = daily_energy['E_ew'].round(4)
+        daily_energy['E_total'] = daily_energy['E_total'].round(4)
+
+        daily_energy.to_csv(output_file,index=False,float_format='%.4f')
         print(f"Wygenerowano dzienne kWh, {len(df)} ilość")
         print(daily_energy.head())
 
-
     def generate_stats(self):
-        input_daily_kW = "output/profile_records.csv"
-        input_daily_kWh = "output/daily_kWh.csv"
+        input_daily_kWh = "output/stats/daily_kWh.csv"
+        input_profile = "output/profile_records.csv"
 
         output_daily_stats = "output/stats/daily_stats.csv"
         output_monthly_stats = "output/stats/monthly_stats.csv"
 
-        df_kWh = pd.read_csv(input_daily_kWh,parse_dates=['date'])
+        #miesieczne kwH
+        df_kWh = pd.read_csv(input_daily_kWh, parse_dates=['date'])
         df_kWh['month'] = df_kWh['date'].dt.to_period('M')
 
+        monthly_kWh_stats = df_kWh.groupby('month').agg({
+            'E_south': ['mean', 'max']
+        }).reset_index()
+
+        monthly_kWh_stats.columns = ['month', 'avg_kWh_south', 'max_kWh_south']
+
+        # miesieczne srednie kw
+        df_kW = pd.read_csv(input_profile, parse_dates=['datetime'])
+        df_kW['month'] = df_kW['datetime'].dt.to_period('M')
+        df_kW['date'] = df_kW['datetime'].dt.floor('D')
+
+        monthly_kW_stats = df_kW.groupby('month').agg({
+            'P_south': ['mean', 'max']
+        }).reset_index()
+
+        monthly_kW_stats.columns = ['month', 'avg_kW_south', 'max_kW_south']
+
+        #miesieczne staty
+        monthly_stats = pd.merge(monthly_kWh_stats, monthly_kW_stats, on='month')
+        monthly_stats['month'] = monthly_stats['month'].astype(str)
+        monthly_stats.to_csv(output_monthly_stats, index=False)
+        print(f"Zapisano statystyki miesięczne!")
+
+        #dzienne max kw
+        daily_kW_stats = df_kW.groupby(['date']).agg(
+            avg_kW_south=('P_south', 'mean'),
+            max_kW_south=('P_south', 'max')
+        ).reset_index()
+
+        #max godzina
+        max_times = df_kW.loc[df_kW.groupby('date')['P_south'].idxmax(), ['date', 'datetime']]
+        max_times = max_times.rename(columns={'datetime': 'max_kW_time_south'})
+
+        daily_kW_stats = pd.merge(daily_kW_stats, max_times, on='date')
+
+        cols_to_round = ['avg_kWh_south', 'max_kWh_south', 'avg_kW_south', 'max_kW_south']
+        monthly_stats[cols_to_round] = monthly_stats[cols_to_round].round(4)
+        daily_kW_stats[['avg_kW_south', 'max_kW_south']] = daily_kW_stats[['avg_kW_south', 'max_kW_south']].round(4)
+
+        daily_kW_stats.to_csv(output_daily_stats, index=False,float_format='%.4f')
+        print("Zapisano statystyki dzienne kW do pliku!")
