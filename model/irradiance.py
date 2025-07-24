@@ -4,7 +4,7 @@ from pandas import Timestamp
 
 class Irradiance:
     def __init__(self):
-        path = "data/PVGIS_hourly.csv"
+        path = "data/avg10years_hour_Gi.csv"
         self.data = None
         self.path = path
         self.daily_max = {}
@@ -59,7 +59,7 @@ class Irradiance:
                 return max_irradiance
             else:
                 print(f"Nie znaleziono max irradiance dla dnia {date_str}")
-                self.daily_max[cache_key] = 0.0
+                self.   daily_max[cache_key] = 0.0
                 return 0.0
 
         except Exception as e:

@@ -6,7 +6,7 @@ def main():
     simulator.sundata.load_data()
     simulator.irradiance.load()
 
-    p_max_south = 1
+    p_max_south = 4
     p_max_ew = 1
 
     graph = GraphGenerator(p_max_south,p_max_ew)
@@ -20,8 +20,11 @@ def main():
     graph.generate_graph()
     print(f"Wygenerowano wykres profilu i zapisano do 'output/graph.png'. ")
 
-    graph.generate_graph_daily_maxkW()
-    print("Wygenerowano mega wykres!!")
+    graph.generate_graph_daily_maxkW_png()
+    print("Wygenerowano wykres do png!!")
+
+    graph.generate_graph_daily_maxKw_svg()
+    print("Wygenerowano wykres do svg!!")
 
 if __name__ == "__main__":
     main()

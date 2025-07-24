@@ -10,7 +10,8 @@ class GraphGenerator:
         self.input_path = "output/profile_records.csv"
         self.input_path_maxkW = "output/stats/daily_stats.csv"
         self.output_path = "output/graph.png"
-        self.output_path_mega = ("output/graph_daily_maxKw.png")
+        self.output_path_daily_maxKw_png = ("output/graph_daily_maxKw.png")
+        self.output_path_svg = "output/graphy/graph.svg"
     def generate_graph(self):
         df = pd.read_csv(self.input_path,parse_dates=['datetime'])
 
@@ -37,7 +38,7 @@ class GraphGenerator:
         plt.savefig(self.output_path,dpi=150)
         plt.close()
 
-    def generate_graph_daily_maxkW(self):
+    def generate_graph_daily_maxkW_png(self):
         df = pd.read_csv(self.input_path_maxkW,parse_dates=['date'])
 
         requred_cols = ['date','max_kW_south']
@@ -64,5 +65,38 @@ class GraphGenerator:
         plt.legend(fontsize=10)
         plt.tight_layout()
 
-        plt.savefig(self.output_path_mega,dpi=300)
+        plt.savefig(self.output_path_daily_maxKw_png,dpi=300)
         plt.close()
+
+    def generate_graph_daily_maxKw_svg(self):
+        df = pd.read_csv(self.input_path_maxkW, parse_dates=['date'])
+
+        requred_cols = ['date', 'max_kW_south']
+
+        for col in requred_cols:
+            if col not in df.columns:
+                raise ValueError(f"Brakuje wymaganej kolumny: {col}")
+
+
+        plt.figure(figsize=(230,6))
+        plt.title("Maksymalna moc chwilowa dzienna",fontsize=16)
+        plt.xlabel("Data",fontsize=4)
+        plt.ylabel("Maksymalna moc chwilowa [kW]",fontsize=12)
+
+        plt.plot(df['date'],df['max_kW_south'],label="Max kW",color="orange",linewidth=1.2)
+
+        locator = mdates.DayLocator()
+        formatter = mdates.DateFormatter('%d-%b')
+        plt.gca().xaxis.set_major_locator(locator)
+        plt.gca().xaxis.set_major_formatter(formatter)
+
+        plt.gca().xaxis.set_minor_locator(mdates.DayLocator())
+        plt.grid(True, which='minor', linestyle='--', linewidth=0.3, alpha=0.5)
+        plt.grid(True, which='major', linestyle='--', alpha=0.4)
+
+        plt.legend(fontsize=10)
+        plt.tight_layout()
+
+        plt.savefig(self.output_path_svg, dpi=300)
+        plt.close()
+
