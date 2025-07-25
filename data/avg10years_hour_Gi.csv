@@ -1,3 +1,11 @@
+Latitude (decimal degrees):	51.279
+Longitude (decimal degrees):	22.569
+Elevation (m):	212
+Radiation database:	PVGIS-SARAH3
+
+
+Slope: 35 deg.
+Azimuth: 0 deg.
 time,G(i),H_sun,T2m,WS10m,Int
 20230101:0010,0.0,0.0,1.5664,3.6518,0.0
 20230101:0110,0.0,0.0,1.4782,3.65,0.0

@@ -12,7 +12,7 @@ class PvSimulator:
         self.sundata = SunData()
         self.irradiance = Irradiance()
 
-    def generate_profile(self, p_max_south, p_max_ew) -> pd.DataFrame:
+    def generate_profile(self, p_max_south, p_max_ew,progress_barr_callback=None) -> pd.DataFrame:
         self.sundata.load_data()
         self.irradiance.load()
 
@@ -29,6 +29,10 @@ class PvSimulator:
         print(f"Processing {len(timestamps)} timestamps...")
 
         for i, ts in enumerate(timestamps):
+            if progress_barr_callback and i % 1000 == 0:
+                percent = int(i / len(timestamps) * 100)
+                progress_barr_callback(percent)
+
             day_timestamp = pd.Timestamp(ts.date())
 
             if i % 1000 == 0:
@@ -37,11 +41,12 @@ class PvSimulator:
             sunrise = self.sundata.getSunrise(ts)
             sunset = self.sundata.getSunset(ts)
 
+
             if sunrise is None or sunset is None:
                 continue
 
-            current_time = ts.time()
-            sunrise_margin = (datetime.combine(ts.date(), sunrise) - timedelta(hours=1)).time()
+            current_time = ts.time() # wyciaganmy czas
+            sunrise_margin = (datetime.combine(ts.date(), sunrise) - timedelta(hours=1)).time() #obliczamy margines wschodu slonca 
             sunset_margin = (datetime.combine(ts.date(), sunset) + timedelta(hours=1)).time()
 
             if current_time < sunrise_margin or current_time > sunset_margin:
@@ -79,10 +84,12 @@ class PvSimulator:
                 })
                 continue
 
+
         df = pd.DataFrame(records)
         print(f"Generated profile with {len(df)} records")
         df.to_csv('output/profile_records.csv', index=False,float_format='%.4f')
         return df
+
 
     def generate_daily_kWh(self):
         intput_file = "output/profile_records.csv"

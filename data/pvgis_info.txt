@@ -1,0 +1,21 @@
+PVGIS info
+top:
+Latitude (decimal degrees):	51.279
+Longitude (decimal degrees):	22.569
+Elevation (m):	212
+Radiation database:	PVGIS-SARAH3
+
+
+Slope: 35 deg.
+Azimuth: 0 deg.
+
+down:
+G(i): Global irradiance on the inclined plane (plane of the array) (W/m2)
+H_sun: Sun height (degree)
+T2m: 2-m air temperature (degree Celsius)
+WS10m: 10-m total wind speed (m/s)
+Int: 1 means solar radiation values are reconstructed
+
+
+
+PVGIS (c) European Union, 2001-2025

@@ -17,5 +17,5 @@ class PV:
 
         self.day_length = (self.sunset - self.sunrise).total_seconds()
 
-        self.max_irradiance = self.irradiance.get_max_day_irradance(day)
+        self.max_irradiance = self.irradiance.get_max_daily_irradance(day)
         self.sigma = self.day_length / 6
