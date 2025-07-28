@@ -6,12 +6,13 @@ import csv
 
 class Irradiance:
     def __init__(self):
-        path = "data/avg10years_hour_Gi.csv"
         self.data = None
-        self.path = path
+        self.path = "data/avg10years_hour_Gi.csv"
         self.daily_max = {}
         self.outputpath = "data/max_daily_10avg_irradiance.csv"
 
+
+    #wczytuje dane z pliku z rekordami co godzine
     def load(self):
         try:
             self.data = pd.read_csv(self.path, skiprows=8)
@@ -36,6 +37,7 @@ class Irradiance:
         except KeyError:
             return 0.0
 
+    #oblicza max irradance dla danego dnia z 24 dziennych rekorodow, zwraca ja , i zapisuje do pliku
     def count_max_day_irradance(self, day: datetime):
         try:
             if hasattr(day, 'date'):
@@ -75,20 +77,20 @@ class Irradiance:
             return 0.0
 
 
-
+    #zaladowuje dane z pliku z juz oblczonymi max irradance
     def load_max_daily_irradance(self):
         if not os.path.exists(self.outputpath):
             print(f"Plik {self.outputpath} nie istnieje brak danych do załadowania!")
             return
 
         try:
-            df = pd.read_csv(self.outputpath,parse_dates=['timestamp'])
+            df = pd.read_csv(self.outputpath,parse_dates=['time'])
             if 'G(i)' not in df.columns:
                 print("Brak col G(i)")
                 return
 
             for _, row in df.iterrows():
-                timestamp = row['timestamp']
+                timestamp = row['time']
                 irradiance = row['G(i)']
 
                 if isinstance(timestamp,str):
@@ -104,23 +106,35 @@ class Irradiance:
         except Exception as e:
             print(f"Błąd podczas wczytaywania plik z max irradance {e}")
 
-    def get_max_daily_irradance(self,day: datetime):
+    #zwraca max irradance dla danego dnia  z pliku z obliczonym maxem
+    def get_max_daily_irradance(self, day: datetime):
+
         try:
             if hasattr(day, 'date'):
                 target_date = day.date()
             else:
                 target_date = pd.to_datetime(day).date()
 
-            key = target_date.strftime('%m-%d')
+            try:
+                equivalent_2023_date = target_date.replace(year=2023)
+            except ValueError:
+                if target_date.month == 2 and target_date.day == 29:
+                    equivalent_2023_date = target_date.replace(year=2023, day=28)
+                else:
+                    raise
+
+            key = equivalent_2023_date.strftime('%m-%d')
+
             if key in self.daily_max:
                 return self.daily_max[key]
             else:
-                print(f"Brak zapisanej max irrydaci dla dnia {key}")
+                print(f"Brak zapisanej max irradancji dla dnia {key}")
                 return 0.0
         except Exception as e:
-            print(f"Bład przy load irrydacji z pliku {e}")
+            print(f"Błąd przy pobieraniu max irradancji: {e}")
+            return 0.0
 
-
+    #zapsisuje irradance do pliku
     def append_irradance_to_file(self, date: datetime.date, irradiance: float):
         file_exists = os.path.exists(self.outputpath)
 
@@ -130,7 +144,7 @@ class Irradiance:
                 with open(self.outputpath, 'r', newline='') as csvfile:
                     reader = csv.DictReader(csvfile)
                     for row in reader:
-                        existing_dates.add(row['timestamp'])
+                        existing_dates.add(row['time'])
             except Exception as e:
                 print(f"Błąd przy odczycie istniejących dat z pliku: {e}")
 

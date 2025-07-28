@@ -52,7 +52,7 @@ class GuiApp:
 
             simulator = PvSimulator()
             simulator.sundata.load_data()
-            simulator.irradiance.load()
+            simulator.irradiance.load_max_daily_irradance()
 
             simulator.generate_profile(p_max_south, p_max_ew,self.update_progress)
             #simulator.generate_daily_kWh()

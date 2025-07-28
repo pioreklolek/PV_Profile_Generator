@@ -14,7 +14,7 @@ class PvSimulator:
 
     def generate_profile(self, p_max_south, p_max_ew,progress_barr_callback=None) -> pd.DataFrame:
         self.sundata.load_data()
-        self.irradiance.load()
+        self.irradiance.load_max_daily_irradance()
 
         os.makedirs('output', exist_ok=True)
 
