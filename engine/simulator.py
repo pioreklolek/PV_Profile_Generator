@@ -12,9 +12,12 @@ class PvSimulator:
         self.sundata = SunData()
         self.irradiance = Irradiance()
 
-    def generate_profile(self, p_max_south, p_max_ew,progress_barr_callback=None) -> pd.DataFrame:
+    def generate_profile(self, p_max_south, p_max_ew, progress_barr_callback=None) -> pd.DataFrame:
         self.sundata.load_data()
         self.irradiance.load_max_daily_irradance()
+        sunset_cache = {}
+        sunrise_cache = {}
+
 
         os.makedirs('output', exist_ok=True)
 
@@ -38,15 +41,21 @@ class PvSimulator:
             if i % 1000 == 0:
                 print(f"Progress: {i}/{len(timestamps)} ({i / len(timestamps) * 100:.1f}%)")
 
-            sunrise = self.sundata.getSunrise(ts)
-            sunset = self.sundata.getSunset(ts)
+
+            if day_timestamp not in sunrise_cache:
+
+                sunrise = self.sundata.getSunrise(ts)
+                sunset = self.sundata.getSunset(ts)
+                sunrise_cache[day_timestamp] = sunrise
+                sunset_cache[day_timestamp] = sunset
 
 
-            if sunrise is None or sunset is None:
-                continue
+                if sunrise is None or sunset is None:
+                    continue
 
-            current_time = ts.time() # wyciaganmy czas
-            sunrise_margin = (datetime.combine(ts.date(), sunrise) - timedelta(hours=1)).time() #obliczamy margines wschodu slonca 
+            current_time = ts.time()  # wyciaganmy czas
+            sunrise_margin = (datetime.combine(ts.date(), sunrise) - timedelta(
+                hours=1)).time()  # obliczamy margines wschodu slonca
             sunset_margin = (datetime.combine(ts.date(), sunset) + timedelta(hours=1)).time()
 
             if current_time < sunrise_margin or current_time > sunset_margin:
@@ -66,8 +75,8 @@ class PvSimulator:
 
                 records.append({
                     'datetime': ts,
-                    'P_south': round(p_south_value,4),
-                    'P_ew': round(p_ew_value,4)
+                    'P_south': round(p_south_value, 4),
+                    'P_ew': round(p_ew_value, 4)
                 })
 
                 processed_count += 1
@@ -84,10 +93,9 @@ class PvSimulator:
                 })
                 continue
 
-
         df = pd.DataFrame(records)
         print(f"Generated profile with {len(df)} records")
-        df.to_csv('output/profile_records.csv', index=False,float_format='%.4f')
+        df.to_csv('output/profile_records.csv', index=False, float_format='%.4f')
         return df
 
 
