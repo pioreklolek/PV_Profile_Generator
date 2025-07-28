@@ -58,7 +58,7 @@ class GuiApp:
             simulator.irradiance.load_max_daily_irradance()
 
             simulator.generate_profile(p_max_south, p_max_ew,self.update_progress)
-            #simulator.generate_daily_kWh()
+            simulator.generate_daily_kWh()
             #simulator.generate_stats()
 
             graph = GraphGenerator(p_max_south, p_max_ew)

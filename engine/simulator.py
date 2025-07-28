@@ -18,7 +18,6 @@ class PvSimulator:
         self.irradiance.load_max_daily_irradance()
         sunset_cache = {}
         sunrise_cache = {}
-        sun_margin_cache = {}
 
         os.makedirs('output', exist_ok=True)
 
@@ -51,15 +50,9 @@ class PvSimulator:
                 if sunrise is None or sunset is None:
                     continue
 
-                base_date = datetime(1900, 1, 1)
-                sunrise_margin = (datetime.combine(base_date, sunrise) - timedelta(hours=0.25)).time()
-                sunset_margin = (datetime.combine(base_date, sunset) + timedelta(hours=0.25)).time()
-                sun_margin_cache[day_timestamp] = (sunrise_margin, sunset_margin)
-
-            sunrise_margin, sunset_margin = sun_margin_cache[day_timestamp]
             current_time = ts.time()
 
-            if current_time < sunrise_margin or current_time > sunset_margin:
+            if current_time < sunrise or current_time > sunset:
                 records.append({
                     'datetime': ts,
                     'P_south': 0.0,
@@ -137,7 +130,7 @@ class PvSimulator:
         print(f"Wygenerowano dzienne kWh, {len(df)} ilość")
         print(daily_energy.head())
 
-    #generuje csv z różnymi statystykami
+        #generuje csv z różnymi statystykami
     def generate_stats(self):
         input_daily_kWh = "output/stats/daily_kWh.csv"
         input_profile = "output/profile_records.csv"
@@ -166,7 +159,7 @@ class PvSimulator:
 
         monthly_kW_stats.columns = ['month', 'avg_kW_south', 'max_kW_south']
 
-        #miesieczne staty
+        #miesieczne statystyki
         monthly_stats = pd.merge(monthly_kWh_stats, monthly_kW_stats, on='month')
         monthly_stats['month'] = monthly_stats['month'].astype(str)
         monthly_stats.to_csv(output_monthly_stats, index=False)
