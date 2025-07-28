@@ -29,14 +29,6 @@ class Irradiance:
         except ValueError as e:
             print(f"Error parsing datetime: {e}")
 
-
-
-    def get_irradance_at(self,timestamp: Timestamp):
-        try:
-            return self.data.loc[timestamp]['G(i)']
-        except KeyError:
-            return 0.0
-
     #oblicza max irradance dla danego dnia z 24 dziennych rekorodow, zwraca ja , i zapisuje do pliku
     def count_max_day_irradance(self, day: datetime):
         try:

@@ -13,6 +13,7 @@ class GraphGenerator:
         self.output_path_daily_maxKw_png = ("output/wykresy/graph_daily_maxKw.png")
         self.output_path_svg = "output/wykresy/graph.svg"
 
+    # wykres w png
     def generate_graph(self):
         df = pd.read_csv(self.input_path,parse_dates=['datetime'])
 
@@ -39,6 +40,7 @@ class GraphGenerator:
         plt.savefig(self.output_path,dpi=150)
         plt.close()
 
+    # wykres w png dla dziennego max kW , tylko dla typu south
     def generate_graph_daily_maxkW_png(self):
         df = pd.read_csv(self.input_path_maxkW,parse_dates=['date'])
 
@@ -69,6 +71,7 @@ class GraphGenerator:
         plt.savefig(self.output_path_daily_maxKw_png,dpi=300)
         plt.close()
 
+    #daily max kW w svg, tylko dla typu south
     def generate_graph_daily_maxKw_svg(self):
         df = pd.read_csv(self.input_path_maxkW, parse_dates=['date'])
 
@@ -102,6 +105,7 @@ class GraphGenerator:
         plt.close()
 
 
+    # wykres w plotly co 15 min roczny dla obu typow
     def generate_15_min_graph_plotly(self):
         df = pd.read_csv(self.input_path)
 

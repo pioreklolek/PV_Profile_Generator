@@ -34,6 +34,8 @@ class GuiApp:
 
         self.generate_button.config(state=DISABLED)
 
+
+    #sprawdza czy input jest wiekszy od zera
     def validate_inputs(self, *args):
         try:
             p_south = self.float_or_zero(self.p_south_var)
@@ -45,6 +47,7 @@ class GuiApp:
         except ValueError:
             self.generate_button.config(state=DISABLED)
 
+    #generuje GUI
     def generate(self):
         try:
             p_max_south = self.float_or_zero(self.p_south_var)
@@ -63,6 +66,7 @@ class GuiApp:
             #graph.generate_graph_daily_maxkW_png()
             #graph.generate_graph_daily_maxKw_svg()
             graph.generate_15_min_graph_plotly()
+            graph.generate_graph_daily_maxKw_svg()
 
 
             messagebox.showinfo("Sukces", "Wygenerowano dane i wykresy!")
@@ -71,6 +75,7 @@ class GuiApp:
             messagebox.showerror("Błąd", f"Wystąpił problem:\n{str(e)}")
             self.root.destroy()
 
+    #jesli entry puste to 0.0 do funkcji przekazane
     def float_or_zero(self,str):
         value = str.get().strip()
         if value == "":
@@ -80,6 +85,7 @@ class GuiApp:
         except ValueError:
             return 0.0
 
+    #progess bar
     def update_progress(self, percent):
         self.progress['value'] = percent
         self.root.update_idletasks()

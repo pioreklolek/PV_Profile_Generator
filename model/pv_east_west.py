@@ -8,7 +8,7 @@ class PV_east_west(PV):
     def __init__(self, P_max, irradiance, sundata,day,current_time):
         super().__init__(P_max, irradiance, sundata,day)
         self.t = current_time
-        self.t_east_peak = self.sunrise + timedelta(hours=2)
+        self.t_east_peak = self.sunrise + timedelta(hours=2)  # przyjmujemy ze peaky sa 2h po wschodzie i 2h przed zachodem
         self.t_west_peak = self.sunset - timedelta(hours=2)
 
     def calculate_east(self):

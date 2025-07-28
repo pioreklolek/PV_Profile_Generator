@@ -12,12 +12,13 @@ class PvSimulator:
         self.sundata = SunData()
         self.irradiance = Irradiance()
 
+    #generuje profil PV w csv
     def generate_profile(self, p_max_south, p_max_ew, progress_barr_callback=None) -> pd.DataFrame:
         self.sundata.load_data()
         self.irradiance.load_max_daily_irradance()
         sunset_cache = {}
         sunrise_cache = {}
-
+        sun_margin_cache = {}
 
         os.makedirs('output', exist_ok=True)
 
@@ -41,22 +42,22 @@ class PvSimulator:
             if i % 1000 == 0:
                 print(f"Progress: {i}/{len(timestamps)} ({i / len(timestamps) * 100:.1f}%)")
 
-
             if day_timestamp not in sunrise_cache:
-
                 sunrise = self.sundata.getSunrise(ts)
                 sunset = self.sundata.getSunset(ts)
                 sunrise_cache[day_timestamp] = sunrise
                 sunset_cache[day_timestamp] = sunset
 
-
                 if sunrise is None or sunset is None:
                     continue
 
-            current_time = ts.time()  # wyciaganmy czas
-            sunrise_margin = (datetime.combine(ts.date(), sunrise) - timedelta(
-                hours=1)).time()  # obliczamy margines wschodu slonca
-            sunset_margin = (datetime.combine(ts.date(), sunset) + timedelta(hours=1)).time()
+                base_date = datetime(1900, 1, 1)
+                sunrise_margin = (datetime.combine(base_date, sunrise) - timedelta(hours=0.25)).time()
+                sunset_margin = (datetime.combine(base_date, sunset) + timedelta(hours=0.25)).time()
+                sun_margin_cache[day_timestamp] = (sunrise_margin, sunset_margin)
+
+            sunrise_margin, sunset_margin = sun_margin_cache[day_timestamp]
+            current_time = ts.time()
 
             if current_time < sunrise_margin or current_time > sunset_margin:
                 records.append({
@@ -98,7 +99,7 @@ class PvSimulator:
         df.to_csv('output/profile_records.csv', index=False, float_format='%.4f')
         return df
 
-
+    #generuje csv z łącznym dziennym kWh
     def generate_daily_kWh(self):
         intput_file = "output/profile_records.csv"
         output_file = "output/stats/daily_kWh.csv"
@@ -136,6 +137,7 @@ class PvSimulator:
         print(f"Wygenerowano dzienne kWh, {len(df)} ilość")
         print(daily_energy.head())
 
+    #generuje csv z różnymi statystykami
     def generate_stats(self):
         input_daily_kWh = "output/stats/daily_kWh.csv"
         input_profile = "output/profile_records.csv"

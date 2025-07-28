@@ -4,6 +4,7 @@ class SunData:
         self.path = "data/sunset_sunrise_2025.csv"
         self.data = None
 
+    #wczytywanie danych z csv ze wschodzmai i zachodami
     def load_data(self):
         try:
             self.data = pd.read_csv(self.path)
@@ -20,6 +21,7 @@ class SunData:
         except ValueError as e:
             print(f"Error parsing datetime: {e}")
 
+    #zwraca wschod/zachod danego dnia
     def getSunrise(self,day):
         if hasattr(day,'date'):
             day_date = day.date()
