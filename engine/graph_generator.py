@@ -2,7 +2,6 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import pandas as pd
 import plotly.graph_objects as go
-from model.sun_data import SunData
 
 class GraphGenerator:
     def __init__(self,p_max_south,p_max_ew):
@@ -109,18 +108,15 @@ class GraphGenerator:
     # wykres w plotly co 15 min roczny dla obu typow
     def generate_15_min_graph_plotly(self):
         df = pd.read_csv(self.input_path)
+
         df['datetime'] = pd.to_datetime(df['datetime']) #konwersja bo sie bugowalo
-
-        sundata = SunData()
-        sundata.load_data()
-
 
         required_cols = ['datetime']
         if self.p_max_south > 0:
-            df['P_south'] = df['P_south'] / 1000 # konwersja na kW
+            df['P_south'] = df['P_south'] / 1000 # kW
             required_cols.append('P_south')
         if self.p_max_ew > 0:
-            df['P_ew'] = df['P_ew'] / 1000 # kW
+            df['P_ew'] = df['P_ew'] / 1000
             required_cols.append('P_ew')
 
         #debug
@@ -128,59 +124,12 @@ class GraphGenerator:
             if col not in df.columns:
                 raise ValueError(f"Brakuje wymaganej kolumny: {col}")
 
-        processed_data = []
-        df_grupped = df.groupby(df['datetime'].dt.date)
-
-        for date,day_data in df_grupped:
-            sunrise_time = sundata.getSunrise(date)
-            sunset_time = sundata.getSunset(date)
-
-            if sunrise_time is None or sunset_time is None:
-                processed_data.append(day_data)
-                continue
-
-            sunrise_datetime = pd.Timestamp.combine(date,sunrise_time)
-            sunset_datetime = pd.Timestamp.combine(date,sunset_time)
-
-            day_filtered = day_data[(day_data['datetime'] >= sunrise_datetime) &
-                                    (day_data['datetime'] <= sunset_datetime)]
-
-            if len(day_filtered) == 0:
-                continue
-
-            sunrise_row = self.interpolate(day_data, sunrise_datetime, is_sunrise=True)
-            sunset_row = self.interpolate(day_data, sunset_datetime, is_sunrise=False)
-
-            day_components = []
-
-            if sunrise_row is not None:
-                day_components.append(pd.DataFrame([sunrise_row]))
-
-            day_between_sun = day_data[(day_data['datetime'] > sunrise_datetime) &
-                                       (day_data['datetime'] < sunset_datetime)]
-            if len(day_between_sun) > 0:
-                day_components.append(day_between_sun)
-
-            if sunset_row is not None:
-                day_components.append(pd.DataFrame([sunset_row]))
-
-            if day_components:
-                day_processed = pd.concat(day_components, ignore_index=True)
-                processed_data.append(day_processed)
-
-        if processed_data:
-            df_final = pd.concat(processed_data, ignore_index=True)
-            df_final = df_final.sort_values('datetime').reset_index(drop=True)
-        else:
-            df_final = df
-
-
         fig = go.Figure()
 
         if self.p_max_south > 0:
             fig.add_trace(go.Scatter(
-                x=df_final['datetime'],
-                y=df_final['P_south'],
+                x=df['datetime'],
+                y=df['P_south'],
                 mode='lines',
                 name='Południe',
                 line=dict(color='red', width=1),
@@ -268,51 +217,5 @@ class GraphGenerator:
         output_html = "output/wykresy/wykres.html"
         fig.write_html(output_html)
 
-        #funkcja pomocnicza , interpolacja przy zachodzie i wschodzie , wygladzenie wzoru
-    def interpolate(self, day_data, sun_datetime, is_sunrise=True):
 
-        if is_sunrise:
-            before_sun = day_data[day_data['datetime'] < sun_datetime]
-            after_sun = day_data[day_data['datetime'] >= sun_datetime]
-        else:
-            before_sun = day_data[day_data['datetime'] <= sun_datetime]
-            after_sun = day_data[day_data['datetime'] > sun_datetime]
 
-        if len(before_sun) == 0 or len(after_sun) == 0:
-            return None
-
-        last_before = before_sun.iloc[-1]
-        first_after = after_sun.iloc[0]
-
-        # Interpolacja
-        time_diff_minutes = (first_after['datetime'] - last_before['datetime']).total_seconds() / 60
-        sun_offset_minutes = (sun_datetime - last_before['datetime']).total_seconds() / 60
-
-        if time_diff_minutes <= 0:
-            return None
-
-        base_row = last_before.copy()
-        base_row['datetime'] = sun_datetime
-
-        if is_sunrise:
-            sun_percentage = (time_diff_minutes - sun_offset_minutes) / time_diff_minutes
-
-            #  P_ew inteprolowa
-            if self.p_max_ew > 0 and 'P_ew' in base_row:
-                base_row['P_ew'] = sun_percentage * first_after['P_ew']
-
-            # P_south bez zmian
-            if self.p_max_south > 0 and 'P_south' in base_row:
-                base_row['P_south'] = 0
-        else:
-            sun_percentage = sun_offset_minutes / time_diff_minutes
-
-            #  P_ew interpolowane
-            if self.p_max_ew > 0 and 'P_ew' in base_row:
-                base_row['P_ew'] = (1 - sun_percentage) * last_before['P_ew']
-
-            # P_south bez zmian
-            if self.p_max_south > 0 and 'P_south' in base_row:
-                base_row['P_south'] = 0
-
-        return base_row
