@@ -13,11 +13,13 @@ class PvSimulator:
         self.irradiance = Irradiance()
 
     #generuje profil PV w csv
-    def generate_profile(self, p_max_south, p_max_ew, progress_barr_callback=None) -> pd.DataFrame:
+    def generate_profile(self, p_max_south, p_max_ew,slope_ew, progress_barr_callback=None) -> pd.DataFrame:
         self.sundata.load_data()
         self.irradiance.load_max_daily_irradance()
         sunset_cache = {}
         sunrise_cache = {}
+
+        self.slope_ew = slope_ew
 
         os.makedirs('output', exist_ok=True)
 
@@ -61,8 +63,8 @@ class PvSimulator:
                 continue
 
             try:
-                power_south = PV_South(p_max_south, self.irradiance, self.sundata, day_timestamp, ts)
-                power_ew = PV_east_west(p_max_ew, self.irradiance, self.sundata, day_timestamp, ts)
+                power_south = PV_South(p_max_south, self.irradiance, self.sundata, day_timestamp,ts)
+                power_ew = PV_east_west(p_max_ew, self.irradiance, self.sundata, day_timestamp, ts,self.slope_ew)
 
                 p_south_value = power_south.calculate()
                 p_ew_value = power_ew.calculate()
@@ -94,41 +96,39 @@ class PvSimulator:
 
     #generuje csv z łącznym dziennym kWh
     def generate_daily_kWh(self):
-        intput_file = "output/profile_records.csv"
+        input_file = "output/profile_records.csv"
         output_file = "output/stats/daily_kWh.csv"
 
-        df = pd.read_csv(intput_file, parse_dates=['datetime'])
-
-        df = df.sort_values('datetime')
-
-        df['next_P_south'] = df['P_south'].shift(-1)
-        df['next_P_ew'] = df['P_ew'].shift(-1)
-        df['next_time'] = df['datetime'].shift(-1)
-
-        df['delta_h'] = (df['next_time'] - df['datetime']).dt.total_seconds() / 3600
-
-        df['E_south'] = (df['P_south']) + df['next_P_south'] / 2 * df['delta_h']
-        df['E_ew'] = (df['P_ew']) + df['next_P_ew'] / 2 * df['delta_h']
-
-        df = df[df['delta_h'].notna()]
-
+        df = pd.read_csv(input_file, parse_dates=['datetime'])
 
         df['date'] = df['datetime'].dt.date
+
+        df['E_south'] = df['P_south'] * 0.25
+        df['E_ew'] = df['P_ew'] * 0.25
 
         daily_energy = df.groupby('date').agg({
             'E_south' : 'sum',
             "E_ew" : 'sum'
         }).reset_index()
 
-        daily_energy['E_total'] = daily_energy['E_south'] + daily_energy['E_ew']
+
+        daily_energy['E_south'] = daily_energy['E_south'] / 1000  # konwersja na kilo
+        daily_energy['E_ew'] = daily_energy['E_ew'] / 1000
+
 
         daily_energy['E_south'] = daily_energy['E_south'].round(4)
         daily_energy['E_ew'] = daily_energy['E_ew'].round(4)
-        daily_energy['E_total'] = daily_energy['E_total'].round(4)
 
-        daily_energy.to_csv(output_file,index=False,float_format='%.4f')
+        total_row = pd.DataFrame([{
+            'date' : 'TOTAL',
+            'E_south' : daily_energy['E_south'].sum().round(4),
+            'E_ew' : daily_energy['E_ew'].sum().round(4)
+        }])
+        result = pd.concat([daily_energy,total_row],ignore_index=True)
+
+        result.to_csv(output_file,index=False,float_format='%.4f')
+
         print(f"Wygenerowano dzienne kWh, {len(df)} ilość")
-        print(daily_energy.head())
 
         #generuje csv z różnymi statystykami
     def generate_stats(self):
@@ -183,3 +183,26 @@ class PvSimulator:
 
         daily_kW_stats.to_csv(output_daily_stats, index=False,float_format='%.4f')
         print("Zapisano statystyki dzienne kW do pliku!")
+
+    def generate_yearly_kWh(self):
+        input_file = "output/profile_records.csv"
+        output_file = "output/stats/year_kWh.csv"
+
+        df = pd.read_csv(input_file,parse_dates=['datetime'])
+
+        total_kWh_south = (df['P_south'].sum()) * 0.25
+        total_kWh_ew = (df['P_ew'].sum()) * 0.25
+
+        total_kWh_south = total_kWh_south / 1000 # na Kilo
+        total_kWh_ew = total_kWh_ew / 1000
+
+        total_kWh_south = round(total_kWh_south, 4)
+        total_kWh_ew =round(total_kWh_ew, 4)
+
+        summ = pd.DataFrame([{
+            'type' : 'TOTAL',
+            'E_south' : total_kWh_south,
+            'E_ew' : total_kWh_ew
+        }])
+        summ.to_csv(output_file,index=False,float_format='%.4f')
+        print(f"Wygenerowano plik z roczna sumą kWh")

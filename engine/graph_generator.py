@@ -12,7 +12,7 @@ class GraphGenerator:
         self.output_path = "output/wykresy/graph.png"
         self.output_path_daily_maxKw_png = ("output/wykresy/graph_daily_maxKw.png")
         self.output_path_svg = "output/wykresy/graph.svg"
-
+        self.output_html = "output/wykresy/wykres.html"
     # wykres w png
     def generate_graph(self):
         df = pd.read_csv(self.input_path,parse_dates=['datetime'])
@@ -214,8 +214,7 @@ class GraphGenerator:
 
 
         #fig.show()
-        output_html = "output/wykresy/wykres.html"
-        fig.write_html(output_html)
+        fig.write_html(self.output_html)
 
 
 
