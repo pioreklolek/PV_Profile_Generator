@@ -37,14 +37,6 @@ class PV_east_west(PV):
 
 
     def calculate_mid_curve(self):
-        t_total = (self.t_west_peak - self.t_east_peak).total_seconds()
-        if t_total == 0:
-            return 0
-        t_cur = (self.t - self.t_east_peak).total_seconds()
-        x = t_cur / t_total
-        if x < 0 or x > 1:
-            return 0
-
         if self.slope == 0:
             time_diff_hours = (self.t - self.t_noon).total_seconds() / 3600.0
             sigma_hours = (self.t_west_peak - self.t_east_peak).total_seconds() / 3600.0 / 2.0
@@ -53,6 +45,13 @@ class PV_east_west(PV):
             return base * midday_factor
 
         elif self.slope == 35:
+            t_total = (self.t_west_peak - self.t_east_peak).total_seconds()
+            if t_total == 0:
+                return 0
+            t_cur = (self.t - self.t_east_peak).total_seconds()
+            x = t_cur / t_total
+            if x < 0 or x > 1:
+                return 0
             a = -2.8
             b = 1.7
             return a * (x - 0.5) ** 2 + b
