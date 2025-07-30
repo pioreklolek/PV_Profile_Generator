@@ -106,18 +106,23 @@ class GraphGenerator:
 
 
     # wykres w plotly co 15 min roczny dla obu typow
-    def generate_15_min_graph_plotly(self):
+    def generate_15_min_graph_plotly(self, slope):
         df = pd.read_csv(self.input_path)
 
         df['datetime'] = pd.to_datetime(df['datetime']) #konwersja bo sie bugowalo
+
+        if slope == 0:
+            p_ew_col = 'P_ew_0'
+        elif slope == 35:
+            p_ew_col = 'P_ew_35'
 
         required_cols = ['datetime']
         if self.p_max_south > 0:
             df['P_south'] = df['P_south'] / 1000 # kW
             required_cols.append('P_south')
         if self.p_max_ew > 0:
-            df['P_ew'] = df['P_ew'] / 1000
-            required_cols.append('P_ew')
+            df[p_ew_col] = df[p_ew_col] / 1000
+            required_cols.append(p_ew_col)
 
         #debug
         for col in required_cols:
@@ -140,7 +145,7 @@ class GraphGenerator:
         if self.p_max_ew > 0:
             fig.add_trace(go.Scatter(
                 x=df['datetime'],
-                y=df['P_ew'],
+                y=df[p_ew_col],
                 mode='lines',
                 name='Wschód-Zachód',
                 line=dict(color='blue', width=1),
@@ -206,12 +211,11 @@ class GraphGenerator:
             annotations.append(dict(
                 xref="paper", yref="paper",
                 x=0.5, y=1.05,
-                text=f"P_ew: {self.p_max_ew:.3f} kWp",
+                text=f"P_east-west: {self.p_max_ew:.3f} kWp, nachylenie: {slope}",
                 showarrow=False,
                 font=dict(size=14, color="blue")
             ))
         fig.update_layout(annotations=annotations)
-
 
         #fig.show()
         fig.write_html(self.output_html)

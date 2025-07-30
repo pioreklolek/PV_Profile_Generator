@@ -68,15 +68,15 @@ class GuiApp:
             simulator.irradiance.load_max_daily_irradance()
 
             simulator.generate_profile(p_max_south, p_max_ew,slope_ew,self.update_progress)
-            simulator.generate_daily_kWh()
-            simulator.generate_yearly_kWh()
+            simulator.generate_daily_kWh(slope_ew)
+            simulator.generate_yearly_kWh(slope_ew)
             #simulator.generate_stats()
 
             graph = GraphGenerator(p_max_south, p_max_ew)
             #graph.generate_graph()
             #graph.generate_graph_daily_maxkW_png()
             #graph.generate_graph_daily_maxKw_svg()
-            graph.generate_15_min_graph_plotly()
+            graph.generate_15_min_graph_plotly(slope_ew)
 
             messagebox.showinfo("Sukces", "Wygenerowano dane i wykresy!")
 

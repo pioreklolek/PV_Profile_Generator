@@ -33,6 +33,12 @@ class PvSimulator:
 
         print(f"Processing {len(timestamps)} timestamps...")
 
+        if self.slope_ew == 0:
+            p_ew_col = 'P_ew_0'
+        elif self.slope_ew == 35:
+            p_ew_col = 'P_ew_35'
+
+
         for i, ts in enumerate(timestamps):
             if progress_barr_callback and i % 1000 == 0:
                 percent = int(i / len(timestamps) * 100)
@@ -58,7 +64,7 @@ class PvSimulator:
                 records.append({
                     'datetime': ts,
                     'P_south': 0.0,
-                    'P_ew': 0.0
+                    p_ew_col: 0.0
                 })
                 continue
 
@@ -72,7 +78,7 @@ class PvSimulator:
                 records.append({
                     'datetime': ts,
                     'P_south': round(p_south_value, 4),
-                    'P_ew': round(p_ew_value, 4)
+                    p_ew_col: round(p_ew_value, 4)
                 })
 
                 processed_count += 1
@@ -85,7 +91,7 @@ class PvSimulator:
                 records.append({
                     'datetime': ts,
                     'P_south': 0.0,
-                    'P_ew': 0.0
+                    p_ew_col: 0.0
                 })
                 continue
 
@@ -95,16 +101,22 @@ class PvSimulator:
         return df
 
     #generuje csv z łącznym dziennym kWh
-    def generate_daily_kWh(self):
+    def generate_daily_kWh(self,slope):
         input_file = "output/profile_records.csv"
         output_file = "output/stats/daily_kWh.csv"
 
         df = pd.read_csv(input_file, parse_dates=['datetime'])
 
+        if self.slope_ew == 0:
+            p_ew_col = 'P_ew_0'
+        elif self.slope_ew == 35:
+            p_ew_col = 'P_ew_35'
+
+
         df['date'] = df['datetime'].dt.date
 
         df['E_south'] = df['P_south'] * 0.25
-        df['E_ew'] = df['P_ew'] * 0.25
+        df['E_ew'] = df[p_ew_col] * 0.25
 
         daily_energy = df.groupby('date').agg({
             'E_south' : 'sum',
@@ -184,14 +196,19 @@ class PvSimulator:
         daily_kW_stats.to_csv(output_daily_stats, index=False,float_format='%.4f')
         print("Zapisano statystyki dzienne kW do pliku!")
 
-    def generate_yearly_kWh(self):
+    def generate_yearly_kWh(self,slope):
         input_file = "output/profile_records.csv"
         output_file = "output/stats/year_kWh.csv"
 
         df = pd.read_csv(input_file,parse_dates=['datetime'])
 
+        if self.slope_ew == 0:
+            p_ew_col = 'P_ew_0'
+        elif self.slope_ew == 35:
+            p_ew_col = 'P_ew_35'
+
         total_kWh_south = (df['P_south'].sum()) * 0.25
-        total_kWh_ew = (df['P_ew'].sum()) * 0.25
+        total_kWh_ew = (df[p_ew_col].sum()) * 0.25
 
         total_kWh_south = total_kWh_south / 1000 # na Kilo
         total_kWh_ew = total_kWh_ew / 1000
