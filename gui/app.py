@@ -31,22 +31,22 @@ class GuiApp:
 
         Label(self.root, text="Stopień nachylenia East-West").grid(row=2,column=0)
 
-        Radiobutton(self.root,text="0°", variable=self.slope_ew_var,value=0).grid(row=2,column=1, sticky=W)
-        Radiobutton(self.root,text="35°", variable=self.slope_ew_var,value=35).grid(row=3,column=1, sticky=W)
+        Radiobutton(self.root,text="0°", variable=self.slope_ew_var,value=0).grid(row=2,column=1,pady=(1,1), sticky=W)
+        Radiobutton(self.root,text="35°", variable=self.slope_ew_var,value=35).grid(row=3,column=1,pady=(0,10), sticky=W)
 
 
         self.generate_button = Button(self.root, text="GENERUJ", command=self.generate)
-        self.generate_button.grid(row=5, column=0, columnspan=2, pady=20)
+        self.generate_button.grid(row=6, column=0, columnspan=2, pady=(25,10))
 
         self.progress = tkinter.ttk.Progressbar(self.root,orient=HORIZONTAL,length=300,mode='determinate')
-        self.progress.grid(row=8, column=0, columnspan=2, padx=10, pady=10)
+        self.progress.grid(row=9, column=0, columnspan=2, padx=10, pady=30)
 
         self.p_south_var.trace_add("write", self.validate_inputs)
         self.p_ew_var.trace_add("write", self.validate_inputs)
 
 
         self.export_button = Button(self.root,text="GENERUJ I IMPORTUJ CSV",command=self.generate_and_export)
-        self.export_button.grid(row=7,column=0,padx=10,pady=10)
+        self.export_button.grid(row=7,column=0,columnspan=2,pady=(7,5))
 
         self.export_button.config(state=DISABLED)
         self.generate_button.config(state=DISABLED)

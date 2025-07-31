@@ -97,7 +97,11 @@ class PvSimulator:
 
         df = pd.DataFrame(records)
         default_output_path = 'output/profile_records.csv'
-        export_target = export_path if export_path else default_output_path
+
+        if export_path:
+            export_target = self.get_unique_filename(export_path)
+        else:
+            export_target = default_output_path
 
         df.to_csv(export_target, index=False, float_format='%.4f')
         print(f"Generated profile with {len(df)} records to path: {export_target}")
@@ -226,3 +230,16 @@ class PvSimulator:
         }])
         summ.to_csv(output_file,index=False,float_format='%.4f')
         print(f"Wygenerowano plik z roczna sumą kWh")
+
+
+    def get_unique_filename(self, path: str) -> str:
+
+        base, ext = os.path.splitext(path)
+        counter = 1
+        new_path = path
+
+        while os.path.exists(new_path):
+            new_path = f"{base} ({counter}){ext}"
+            counter += 1
+
+        return new_path
