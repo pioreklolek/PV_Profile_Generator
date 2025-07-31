@@ -3,6 +3,9 @@ from tkinter import *
 from tkinter import messagebox
 import webbrowser
 import os
+
+from contourpy.util.data import simple
+
 from engine.graph_generator import GraphGenerator
 from engine.simulator import PvSimulator
 
@@ -36,11 +39,16 @@ class GuiApp:
         self.generate_button.grid(row=5, column=0, columnspan=2, pady=20)
 
         self.progress = tkinter.ttk.Progressbar(self.root,orient=HORIZONTAL,length=300,mode='determinate')
-        self.progress.grid(row=6, column=0, columnspan=2, padx=10, pady=10)
+        self.progress.grid(row=8, column=0, columnspan=2, padx=10, pady=10)
 
         self.p_south_var.trace_add("write", self.validate_inputs)
         self.p_ew_var.trace_add("write", self.validate_inputs)
 
+
+        self.export_button = Button(self.root,text="GENERUJ I IMPORTUJ CSV",command=self.generate_and_export)
+        self.export_button.grid(row=7,column=0,padx=10,pady=10)
+
+        self.export_button.config(state=DISABLED)
         self.generate_button.config(state=DISABLED)
 
 
@@ -51,8 +59,10 @@ class GuiApp:
             p_ew = self.float_or_zero(self.p_ew_var)
             if p_south > 0 or p_ew > 0:
                 self.generate_button.config(state=NORMAL)
+                self.export_button.config(state=NORMAL)
             else:
                 self.generate_button.config(state=DISABLED)
+                self.export_button.config(state=DISABLED)
         except ValueError:
             self.generate_button.config(state=DISABLED)
 
@@ -104,5 +114,27 @@ class GuiApp:
         self.progress['value'] = percent
         self.root.update_idletasks()
 
+    def generate_and_export(self):
+        try:
+            p_max_south = self.float_or_zero(self.p_south_var)
+            p_max_ew = self.float_or_zero(self.p_ew_var)
+            slope_ew = self.slope_ew_var.get()
+
+            simulator = PvSimulator()
+
+            downloads_dir = os.path.join(os.path.expanduser("~"), "Downloads")
+            export_path = os.path.join(downloads_dir, "profile_records.csv")
+
+            os.makedirs(downloads_dir, exist_ok=True)
+
+            simulator.generate_profile(p_max_south, p_max_ew, slope_ew, self.update_progress, export_path)
+            
+            messagebox.showinfo("Sukces", f"Plik CSV został zapisany w: {downloads_dir}")
+            self.root.destroy()
+        except Exception as e:
+            messagebox.showerror("Błąd", f"Wystąpił problem:\n{str(e)}")
+            self.root.destroy()
+
     def startApp(self):
         self.root.mainloop()
+

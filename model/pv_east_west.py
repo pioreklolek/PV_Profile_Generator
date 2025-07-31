@@ -12,8 +12,8 @@ class PV_east_west(PV):
 
         day_length = (self.sunset - self.sunrise).total_seconds() / 3600.0
 
-        # Przesunięcie od południa do peak, max 30%, nie więcej niż 3h
-        offset_hours = min(day_length * 0.3, 3)
+        # Przesunięcie od południa do peak, max 40%, nie więcej niż 4h
+        offset_hours = min(day_length * 0.35, 3.5)
 
         # Południe = środek dnia
         self.t_noon = self.sunrise + timedelta(hours=day_length / 2)

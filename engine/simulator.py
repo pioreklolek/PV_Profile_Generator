@@ -13,7 +13,7 @@ class PvSimulator:
         self.irradiance = Irradiance()
 
     #generuje profil PV w csv
-    def generate_profile(self, p_max_south, p_max_ew,slope_ew, progress_barr_callback=None) -> pd.DataFrame:
+    def generate_profile(self, p_max_south, p_max_ew,slope_ew, progress_barr_callback=None, export_path = None) -> pd.DataFrame:
         self.sundata.load_data()
         self.irradiance.load_max_daily_irradance()
         sunset_cache = {}
@@ -96,8 +96,11 @@ class PvSimulator:
                 continue
 
         df = pd.DataFrame(records)
-        print(f"Generated profile with {len(df)} records")
-        df.to_csv('output/profile_records.csv', index=False, float_format='%.4f')
+        default_output_path = 'output/profile_records.csv'
+        export_target = export_path if export_path else default_output_path
+
+        df.to_csv(export_target, index=False, float_format='%.4f')
+        print(f"Generated profile with {len(df)} records to path: {export_target}")
         return df
 
     #generuje csv z łącznym dziennym kWh
