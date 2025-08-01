@@ -11,6 +11,8 @@ class GuiApp:
     def __init__(self):
         self.root = Tk()
         self.root.title("Generator Profili PV")
+        self.root.update()
+
 
         self.p_south_var = StringVar(value="0")
         self.p_ew_var = StringVar(value="0")
@@ -47,6 +49,8 @@ class GuiApp:
 
         self.export_button.config(state=DISABLED)
         self.generate_button.config(state=DISABLED)
+
+        self.center_window()
 
 
     #sprawdza czy input jest wiekszy od zera
@@ -132,6 +136,22 @@ class GuiApp:
         except Exception as e:
             messagebox.showerror("Błąd", f"Wystąpił problem:\n{str(e)}")
             self.root.destroy()
+
+    def center_window(self):
+        self.root.update_idletasks()
+
+        width = self.root.winfo_width()
+        height = self.root.winfo_height()
+
+        screen_width = self.root.winfo_screenwidth()
+        screen_height = self.root.winfo_screenheight()
+
+        x = (screen_width - width) // 2
+        y = (screen_height - height) // 2
+
+        # Ustaw nową geometrię okna
+        self.root.geometry(f"{width}x{height}+{x}+{y}")
+
 
     def startApp(self):
         self.root.mainloop()
