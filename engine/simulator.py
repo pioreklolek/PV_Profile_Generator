@@ -217,7 +217,7 @@ class PvSimulator:
         total_kWh_south = (df['P_south'].sum()) * 0.25
         total_kWh_ew = (df[p_ew_col].sum()) * 0.25
 
-        total_kWh_south = total_kWh_south / 1000 # na Kilo
+        total_kWh_south = total_kWh_south / 1000 # na kilo
         total_kWh_ew = total_kWh_ew / 1000
 
         total_kWh_south = round(total_kWh_south, 4)

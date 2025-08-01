@@ -1,6 +1,5 @@
 import math
 from datetime import timedelta
-
 from model.PV import PV
 
 
@@ -52,8 +51,8 @@ class PV_east_west(PV):
             x = t_cur / t_total
             if x < 0 or x > 1:
                 return 0
-            a = -2.45  #parametry wplywywa na wyladzeine polaczenia peaku z srodkiem wykresu  , podstawowo: -2.8
-            b = 1.6  # wspolczynnik pomnozenia peaku srodku wykresu do peaku east-west podstaowo  1.7 , czyli peak srodka ma 170% wartosci peak eastwest
+            a = -2.45  # parametry wplywywa na wyladzeine polaczenia peaku z srodkiem wykresu  , podstawowo: -2.8
+            b = 1.6    # wspolczynnik pomnozenia peaku srodku wykresu do peaku east-west podstaowo  1.7 , czyli peak srodka ma 170% wartosci peak eastwest
             return a * (x - 0.5) ** 2 + b
         else:
             print(f"Niewłaściwa wartość slope: {self.slope}")

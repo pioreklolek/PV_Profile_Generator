@@ -3,9 +3,6 @@ from tkinter import *
 from tkinter import messagebox
 import webbrowser
 import os
-
-from contourpy.util.data import simple
-
 from engine.graph_generator import GraphGenerator
 from engine.simulator import PvSimulator
 
@@ -45,7 +42,7 @@ class GuiApp:
         self.p_ew_var.trace_add("write", self.validate_inputs)
 
 
-        self.export_button = Button(self.root,text="GENERUJ I IMPORTUJ CSV",command=self.generate_and_export)
+        self.export_button = Button(self.root,text="GENERUJ I EXPORTUJ DO CSV",command=self.generate_and_export)
         self.export_button.grid(row=7,column=0,columnspan=2,pady=(7,5))
 
         self.export_button.config(state=DISABLED)
@@ -78,7 +75,7 @@ class GuiApp:
             simulator.irradiance.load_max_daily_irradance()
 
             simulator.generate_profile(p_max_south, p_max_ew,slope_ew,self.update_progress)
-            simulator.generate_daily_kWh(slope_ew)
+            #simulator.generate_daily_kWh(slope_ew)
             simulator.generate_yearly_kWh(slope_ew)
             #simulator.generate_stats()
 
@@ -114,6 +111,7 @@ class GuiApp:
         self.progress['value'] = percent
         self.root.update_idletasks()
 
+    #funkcja do przycisku , generowanuje i exportuje wykres
     def generate_and_export(self):
         try:
             p_max_south = self.float_or_zero(self.p_south_var)
